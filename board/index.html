@@ -6,136 +6,142 @@
 <title>TASK LORD</title>
 <style>
   :root{
-    /* vaporwave on deep dark — restrained, neon used as accent only */
-    --bg:#07060d; --bg2:#0b0a16;
-    --panel:rgba(20,18,38,.55); --panel-solid:#13111f;
-    --line:rgba(140,120,220,.14); --line-hi:rgba(255,113,206,.45);
-    --ink:#ece9ff; --mut:#8b86b8; --faint:#564f7e;
-    --pink:#ff71ce; --cyan:#21d4fd; --mint:#3bf0b0; --purple:#b967ff; --gold:#ffd76e;
-    --backlog:#6f6a96; --prog:var(--cyan); --block:var(--pink); --done:var(--mint);
+    --bg:#0a0a0c; --bg-2:#0c0c10;
+    --surface:#121216; --surface-hi:#17171c;
+    --line:rgba(236,231,221,.07); --line-hi:rgba(236,231,221,.14);
+    --ink:#ece9e1; --ink-mid:#9b988e; --ink-lo:#615e57; --ink-faint:#46443e;
+    --accent:#c8ad7c; --accent-dim:#8f7d59;
+    --st-backlog:#54524b; --st-prog:#c8ad7c; --st-blocked:#b06a5f; --st-done:#5f7367;
+    --urgent:#c77b63;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;color:var(--ink);
-    font:13.5px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
-    background:
-      radial-gradient(900px 500px at 12% -8%, rgba(185,103,255,.18), transparent 60%),
-      radial-gradient(900px 500px at 92% 0%, rgba(33,212,253,.12), transparent 55%),
-      linear-gradient(180deg,var(--bg),var(--bg2));
-    background-attachment:fixed;
-    -webkit-font-smoothing:antialiased;
+    margin:0;color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.5;
+    background:linear-gradient(180deg,#0b0b0e,var(--bg) 40%);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   }
-  /* faint future grid */
-  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-    background-image:linear-gradient(rgba(140,120,220,.045) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(140,120,220,.045) 1px,transparent 1px);
-    background-size:46px 46px;mask-image:linear-gradient(180deg,transparent,#000 18%,#000 75%,transparent);}
-  header,.board,footer{position:relative;z-index:1}
+  ::selection{background:rgba(200,173,124,.25)}
 
-  header{position:sticky;top:0;z-index:9;padding:16px 24px;display:flex;
-    align-items:center;gap:18px;flex-wrap:wrap;
-    background:linear-gradient(180deg,rgba(7,6,13,.92),rgba(7,6,13,.55));
-    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  h1{font-size:15px;margin:0;letter-spacing:.42em;font-weight:600;text-transform:uppercase}
-  h1 .lord{background:linear-gradient(90deg,var(--pink),var(--purple),var(--cyan));
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    filter:drop-shadow(0 0 14px rgba(255,113,206,.35))}
-  .meta{color:var(--mut);font-size:11px;letter-spacing:.04em}
-  .spacer{flex:1}
-  input.search{background:rgba(10,9,20,.7);border:1px solid var(--line);color:var(--ink);
-    padding:8px 13px;border-radius:10px;min-width:210px;font-size:12.5px;outline:none;letter-spacing:.02em}
-  input.search:focus{border-color:var(--line-hi);box-shadow:0 0 0 3px rgba(255,113,206,.08)}
-  .filters{display:flex;gap:7px;flex-wrap:wrap}
-  .chip{border:1px solid var(--line);background:rgba(20,18,38,.5);color:var(--mut);
-    padding:5px 11px;border-radius:999px;cursor:pointer;font-size:11px;user-select:none;
-    letter-spacing:.04em;transition:.15s;text-transform:lowercase}
-  .chip:hover{color:var(--ink)}
-  .chip.on{color:var(--ink);border-color:var(--line-hi);
-    box-shadow:0 0 0 1px rgba(255,113,206,.25),0 0 16px rgba(255,113,206,.12)}
-  .chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  /* ---- masthead ---- */
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:28px;
+    padding:18px 30px 16px;background:linear-gradient(180deg,rgba(10,10,12,.96),rgba(10,10,12,.7));
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .brand{font-size:13px;letter-spacing:.52em;font-weight:600;text-transform:uppercase;
+    color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--accent);font-weight:600}
+  .stat{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);letter-spacing:.04em;white-space:nowrap}
+  .stat .live{color:var(--accent-dim)}
+  .grow{flex:1}
+  .search{appearance:none;background:var(--surface);border:1px solid var(--line);
+    color:var(--ink);font-family:var(--sans);font-size:12px;padding:7px 12px;border-radius:6px;
+    width:200px;outline:none;transition:border-color .15s,width .2s}
+  .search::placeholder{color:var(--ink-faint)}
+  .search:focus{border-color:var(--line-hi);width:240px}
+  .toggles{display:flex;gap:18px;align-items:center}
+  .tg{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);
+    cursor:pointer;user-select:none;padding-bottom:3px;border-bottom:1px solid transparent;transition:.15s}
+  .tg:hover{color:var(--ink-mid)}
+  .tg.on{color:var(--ink);border-bottom-color:var(--accent)}
 
-  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 24px 60px;align-items:start}
-  @media(max-width:1100px){.board{grid-template-columns:1fr 1fr}}
-  @media(max-width:680px){.board{grid-template-columns:1fr}}
-  .col{border:1px solid var(--line);border-radius:16px;min-height:130px;
-    background:linear-gradient(180deg,rgba(18,16,33,.5),rgba(11,10,22,.35));overflow:hidden}
-  .col h2{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;margin:0;
-    padding:14px 16px;display:flex;align-items:center;gap:10px;color:var(--mut);
+  /* ---- area rail ---- */
+  .rail{display:flex;gap:22px;padding:11px 30px;border-bottom:1px solid var(--line);
+    overflow-x:auto;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .area{font-size:11px;letter-spacing:.04em;color:var(--ink-faint);cursor:pointer;
+    white-space:nowrap;transition:.15s}
+  .area .n{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-left:6px}
+  .area:hover{color:var(--ink-mid)}
+  .area.on{color:var(--ink)} .area.on .n{color:var(--accent-dim)}
+
+  /* ---- board ---- */
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
     border-bottom:1px solid var(--line)}
-  .col h2 .n{margin-left:auto;color:var(--ink);font-weight:600;font-size:11px;
-    background:rgba(140,120,220,.12);padding:1px 9px;border-radius:999px}
-  .bar{height:2px}
-  .bar.backlog{background:linear-gradient(90deg,var(--backlog),transparent)}
-  .bar.in_progress{background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan)}
-  .bar.blocked{background:linear-gradient(90deg,var(--pink),transparent);box-shadow:0 0 12px var(--pink)}
-  .bar.done{background:linear-gradient(90deg,var(--mint),transparent);box-shadow:0 0 12px var(--mint)}
-  .cards{padding:12px;display:flex;flex-direction:column;gap:12px}
+  @media(max-width:1080px){.board{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.board{grid-template-columns:1fr}}
+  .col{background:var(--bg);min-height:60vh;padding:0 0 40px;min-width:0}
+  .col-h{position:sticky;top:71px;z-index:10;display:flex;align-items:baseline;gap:10px;
+    padding:16px 22px 12px;background:var(--bg);border-top:2px solid var(--ch);
+    margin-bottom:2px}
+  .col-h .t{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mid)}
+  .col-h .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);margin-left:auto}
+  .col.backlog{--ch:var(--st-backlog)} .col.in_progress{--ch:var(--st-prog)}
+  .col.blocked{--ch:var(--st-blocked)} .col.done{--ch:var(--st-done)}
+  .stack{display:flex;flex-direction:column;gap:10px;padding:0 16px;min-width:0}
 
-  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:13px;
-    padding:13px 14px;backdrop-filter:blur(6px);transition:.18s;overflow:hidden}
-  .card:hover{border-color:var(--line-hi);transform:translateY(-1px);
-    box-shadow:0 6px 30px rgba(0,0,0,.4),0 0 0 1px rgba(255,113,206,.12)}
-  .card .meta-row{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap}
-  .ident{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint);letter-spacing:.06em}
-  .name{font-weight:650;font-size:13.5px;margin:2px 0 6px;word-break:break-word;letter-spacing:.01em}
-  .badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.06em;
-    text-transform:uppercase;white-space:nowrap;border:1px solid transparent}
-  .area{color:#07060d}
-  .type{background:rgba(140,120,220,.12);border-color:var(--line)}
-  .prio{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:var(--mut);
-    letter-spacing:.05em;text-transform:uppercase}
-  .prio b{width:6px;height:6px;border-radius:50%}
-  .prio.urgent{color:var(--pink)} .prio.urgent b{background:var(--pink);box-shadow:0 0 8px var(--pink)}
-  .prio.high{color:var(--gold)} .prio.high b{background:var(--gold)}
-  .prio.medium b{background:var(--cyan)} .prio.low b{background:var(--faint)}
-  .leftoff{color:#cdc8f0;font-size:12px;margin:6px 0}
-  .next{color:#bff7e4;font-size:11.5px;margin-top:7px}
-  .next b,.block b{font-weight:700;opacity:.7;font-size:9px;letter-spacing:.08em;margin-right:5px}
-  .block{color:#ffc2e6;font-size:11.5px;margin-top:6px}
-  .foot{display:flex;gap:7px;align-items:center;margin-top:10px;flex-wrap:wrap}
-  .tag{font-size:10px;color:var(--mut);background:rgba(10,9,20,.5);border:1px solid var(--line);
-    padding:2px 7px;border-radius:6px;letter-spacing:.02em}
-  .tag.stale{color:var(--gold);border-color:rgba(255,215,110,.3)}
-  .tag.dirty{color:var(--cyan);border-color:rgba(33,212,253,.3)}
-  .path{font:10px/1.4 ui-monospace,Menlo,monospace;color:var(--faint);word-break:break-all;margin-top:8px;opacity:.65}
-  .cook{margin-top:11px;width:100%;cursor:pointer;border:1px solid var(--line-hi);
-    background:linear-gradient(90deg,rgba(255,113,206,.12),rgba(185,103,255,.1));
-    color:var(--ink);padding:8px;border-radius:9px;font-size:11px;font-weight:650;
-    letter-spacing:.1em;text-transform:uppercase;transition:.15s}
-  .cook:hover{box-shadow:0 0 22px rgba(255,113,206,.3);background:linear-gradient(90deg,rgba(255,113,206,.22),rgba(33,212,253,.16))}
-  .dismiss{position:absolute;top:8px;right:9px;width:20px;height:20px;line-height:18px;
-    text-align:center;border-radius:6px;cursor:pointer;color:var(--faint);font-size:13px;
-    border:1px solid transparent;transition:.15s;opacity:0}
-  .card:hover .dismiss{opacity:1}
-  .dismiss:hover{color:var(--pink);border-color:var(--line-hi);background:rgba(255,113,206,.08)}
-  .empty{color:var(--faint);padding:22px;text-align:center;font-size:11px;letter-spacing:.05em}
-  footer{color:var(--faint);font-size:10.5px;text-align:center;padding:18px;letter-spacing:.06em}
+  /* ---- card ---- */
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);
+    border-radius:5px;padding:13px 15px 13px 17px;transition:background .15s,border-color .15s;min-width:0}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+    background:var(--sp);border-radius:5px 0 0 5px;opacity:.85}
+  .card.s-backlog{--sp:var(--st-backlog)} .card.s-in_progress{--sp:var(--st-prog)}
+  .card.s-blocked{--sp:var(--st-blocked)} .card.s-done{--sp:var(--st-done)}
+  .card:hover{background:var(--surface-hi);border-color:var(--line-hi)}
 
-  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:rgba(15,13,28,.96);border:1px solid var(--line-hi);color:var(--ink);
-    padding:12px 18px;border-radius:11px;font-size:12px;max-width:520px;z-index:50;
-    opacity:0;transition:.25s;box-shadow:0 0 30px rgba(255,113,206,.2);pointer-events:none}
+  .eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:7px;
+    font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-lo);min-height:12px}
+  .eyebrow .ident{font-family:var(--mono);letter-spacing:.06em;color:var(--ink-faint)}
+  .eyebrow .sep{color:var(--ink-faint);opacity:.55}
+  .eyebrow .prio.urgent{color:var(--urgent)} .eyebrow .prio.high{color:var(--accent)}
+
+  .title{font-size:13.5px;font-weight:600;color:var(--ink);letter-spacing:.005em;
+    margin-bottom:5px;word-break:break-word}
+  .summary{font-size:12px;color:var(--ink-mid);margin-bottom:2px}
+  .line{font-size:11.5px;margin-top:6px;color:var(--ink-mid)}
+  .line .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-lo);margin-right:7px}
+  .line.blocked .k{color:var(--st-blocked)}
+  .line.next .k{color:var(--accent-dim)}
+
+  .gutter{display:flex;gap:14px;margin-top:11px;font-family:var(--mono);font-size:10px;
+    color:var(--ink-faint);letter-spacing:.02em}
+  .path{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:7px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7}
+
+  .act{display:flex;align-items:center;width:100%;margin-top:12px;padding-top:11px;
+    border-top:1px solid var(--line);background:none;border-left:none;border-right:none;
+    border-bottom:none;cursor:pointer;color:var(--ink-mid);font-family:var(--sans);
+    font-size:11.5px;letter-spacing:.02em;text-align:left;transition:color .15s}
+  .act .arrow{margin-left:auto;color:var(--ink-faint);transition:transform .15s,color .15s}
+  .card:hover .act{color:var(--ink)}
+  .card:hover .act .arrow{color:var(--accent);transform:translateX(3px)}
+
+  .dismiss{position:absolute;top:9px;right:10px;width:18px;height:18px;display:flex;
+    align-items:center;justify-content:center;cursor:pointer;color:var(--ink-faint);
+    font-size:15px;line-height:1;opacity:0;transition:.15s;background:none;border:none;font-family:var(--sans)}
+  .card:hover .dismiss{opacity:.7}
+  .dismiss:hover{opacity:1;color:var(--st-blocked)}
+
+  .empty{color:var(--ink-faint);font-size:11px;letter-spacing:.04em;padding:14px 22px}
+
+  footer{padding:18px 30px 26px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    letter-spacing:.04em}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);
+    background:var(--surface-hi);border:1px solid var(--line-hi);color:var(--ink);
+    padding:12px 18px;border-radius:7px;font-size:12px;max-width:540px;z-index:60;opacity:0;
+    transition:opacity .2s,transform .2s;pointer-events:none;box-shadow:0 18px 50px rgba(0,0,0,.55)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  #toast b{color:var(--pink)}
-  code{font:11px ui-monospace,Menlo,monospace;color:var(--cyan)}
+  #toast .em{color:var(--accent)}
+  #toast .sub{color:var(--ink-mid)}
+  code{font-family:var(--mono);font-size:11px;color:var(--accent-dim)}
 </style>
 </head>
 <body>
 <header>
-  <h1>TASK&nbsp;<span class="lord">LORD</span></h1>
-  <span class="meta" id="meta">loading…</span>
-  <div class="spacer"></div>
-  <input class="search" id="search" placeholder="filter…" />
-  <div class="filters" id="srcFilters">
-    <span class="chip on" data-src="session"><span class="dot" style="background:var(--purple)"></span>sessions</span>
-    <span class="chip on" data-src="code"><span class="dot" style="background:var(--cyan)"></span>code</span>
-    <span class="chip on" data-src="business"><span class="dot" style="background:var(--mint)"></span>business</span>
-    <span class="chip" data-staleonly="1">stale</span>
+  <span class="brand">Task <b>Lord</b></span>
+  <span class="stat" id="stat">loading</span>
+  <span class="grow"></span>
+  <input class="search" id="search" placeholder="Filter" />
+  <div class="toggles" id="toggles">
+    <span class="tg on" data-src="session">Sessions</span>
+    <span class="tg on" data-src="code">Code</span>
+    <span class="tg on" data-src="business">Business</span>
+    <span class="tg" data-staleonly="1">Stalled</span>
   </div>
 </header>
-
-<div class="filters" id="areaFilters" style="padding:8px 24px 0"></div>
+<div class="rail" id="rail"></div>
 <div class="board" id="board"></div>
 <footer id="footer"></footer>
 <div id="toast"></div>
@@ -143,36 +149,36 @@
 <script src="board.js" onerror="window.__noboardjs=1"></script>
 <script>
 const COLS=[["backlog","Backlog"],["in_progress","In Progress"],["blocked","Blocked"],["done","Done"]];
-const PRIO=["","urgent","high","medium","low"];
 let DATA={cards:[]};
 const state={sources:new Set(["session","code","business"]),areas:new Set(),staleOnly:false,q:""};
-const TOKEN = window.TASKLORD_TOKEN || null;
+const TOKEN=window.TASKLORD_TOKEN||null;
 
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function idle(d){if(d==null)return"";if(d===0)return"today";if(d===1)return"1d";return d+"d idle";}
-function lum(hex){if(!hex)return"#07060d";const h=hex.replace("#","");const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return (r*299+g*587+b*114)/1000>140?"#07060d":"#fff";}
+function idle(d){if(d==null)return"";if(d===0)return"today";if(d===1)return"1d idle";return d+"d idle";}
 
 function cardHTML(c){
-  const area = c.area ? `<span class="badge area" style="background:${esc(c.area_color||'#888')};color:${lum(c.area_color)}">${esc(c.area)}</span>`:"";
-  const type = c.type ? `<span class="badge type" style="color:${esc(c.type_color||'var(--mut)')};border-color:${esc(c.type_color||'')}55">${esc(c.type)}</span>`:"";
-  const p = c.priority||0;
-  const prio = p&&p<=4 ? `<span class="prio ${PRIO[p]}"><b></b>${esc(c.priority_label||PRIO[p])}</span>`:"";
-  const ident = c.identifier?`<span class="ident">${esc(c.identifier)}</span>`:"";
-  const next=(c.next_step&&c.next_step!=="—")?`<div class="next"><b>NEXT</b>${esc(c.next_step)}</div>`:"";
-  const block=c.blockers?`<div class="block"><b>BLOCKED</b>${esc(c.blockers)}</div>`:"";
-  const stale=c.stale?`<span class="tag stale">${esc(idle(c.days_idle))}</span>`:(c.days_idle!=null?`<span class="tag">${esc(idle(c.days_idle))}</span>`:"");
-  const dirty=c.git&&c.git.dirty?`<span class="tag dirty">● ${c.git.dirty_count} uncommitted</span>`:"";
+  const tok=[];
+  if(c.identifier) tok.push(`<span class="ident">${esc(c.identifier)}</span>`);
+  if(c.area) tok.push(`<span>${esc(c.area)}</span>`);
+  if(c.type) tok.push(`<span>${esc(c.type)}</span>`);
+  if(c.priority===1) tok.push(`<span class="prio urgent">Urgent</span>`);
+  else if(c.priority===2) tok.push(`<span class="prio high">High</span>`);
+  const eyebrow=`<div class="eyebrow">${tok.join('<span class="sep">·</span>')}</div>`;
+  const summary=(c.left_off&&c.left_off!=="—")?`<div class="summary">${esc(c.left_off)}</div>`:"";
+  const next=(c.next_step&&c.next_step!=="—")?`<div class="line next"><span class="k">Next</span>${esc(c.next_step)}</div>`:"";
+  const blocked=c.blockers?`<div class="line blocked"><span class="k">Blocked</span>${esc(c.blockers)}</div>`:"";
+  const g=[];
+  if(c.days_idle!=null) g.push(`<span>${esc(idle(c.days_idle))||"today"}</span>`);
+  if(c.git&&c.git.dirty) g.push(`<span>${c.git.dirty_count} uncommitted</span>`);
+  const gutter=g.length?`<div class="gutter">${g.join("")}</div>`:"";
   const path=c.path?`<div class="path">${esc(c.path)}</div>`:"";
-  const verb=c.source==="session"?"▶ continue · fresh + handoff":c.source==="business"?"↗ open trello":"🔥 cook";
-  return `<div class="card">
-    <div class="dismiss" title="Done with this? Remove it for good" onclick='dismiss(${JSON.stringify(c.id)},event)'>✕</div>
-    <div class="meta-row">${ident}${area}${type}${prio}</div>
-    <div class="name">${esc(c.label)}</div>
-    ${c.left_off&&c.left_off!=="—"?`<div class="leftoff">${esc(c.left_off)}</div>`:""}
-    ${next}${block}
-    <div class="foot">${stale}${dirty}</div>
-    ${path}
-    <button class="cook" onclick='cook(${JSON.stringify(c.id)})'>${verb}</button>
+  const verb=c.source==="session"?"Continue in a fresh session":c.source==="business"?"Open in Trello":"Cook a fresh session";
+  return `<div class="card s-${c.status}">
+    <button class="dismiss" title="Dismiss — won't return" onclick='dismiss(${JSON.stringify(c.id)},event)'>×</button>
+    ${eyebrow}
+    <div class="title">${esc(c.label)}</div>
+    ${summary}${next}${blocked}${gutter}${path}
+    <button class="act" onclick='cook(${JSON.stringify(c.id)})'>${verb}<span class="arrow">→</span></button>
   </div>`;
 }
 
@@ -187,70 +193,63 @@ function render(){
   });
   document.getElementById("board").innerHTML=COLS.map(([k,t])=>{
     const list=cards.filter(c=>c.status===k);
-    const inner=list.length?list.map(cardHTML).join(""):`<div class="empty">— clear —</div>`;
-    return `<section class="col"><div class="bar ${k}"></div><h2>${t}<span class="n">${list.length}</span></h2><div class="cards">${inner}</div></section>`;
+    const inner=list.length?`<div class="stack">${list.map(cardHTML).join("")}</div>`:`<div class="empty">Clear</div>`;
+    return `<section class="col ${k}"><div class="col-h"><span class="t">${t}</span><span class="n">${list.length}</span></div>${inner}</section>`;
   }).join("");
-  document.getElementById("meta").textContent=`${cards.length}/${DATA.total||DATA.cards.length} · ${fmt(DATA.generated_at)}${TOKEN?" · live":" · read-only"}`;
+  document.getElementById("stat").innerHTML=`${cards.length} of ${DATA.total||DATA.cards.length} &nbsp; ${fmt(DATA.generated_at)} &nbsp; <span class="live">${TOKEN?"live":"read-only"}</span>`;
 }
 
-function fmt(iso){if(!iso)return"?";try{return new Date(iso).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}catch(e){return iso;}}
-
+function fmt(iso){if(!iso)return"";try{return new Date(iso).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}catch(e){return"";}}
 function toast(html,ms=4600){const t=document.getElementById("toast");t.innerHTML=html;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),ms);}
 
 function cook(id){
   const c=DATA.cards.find(x=>x.id===id);if(!c)return;
   if(TOKEN){
-    fetch(`/cook?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`)
-      .then(r=>r.json()).then(r=>{
-        if(!r.ok){toast("⚠️ "+esc(r.error||"failed"));return;}
-        toast(`<b>${esc(r.action)}</b> — ${esc(c.label)}<br><span style="color:var(--mut)">directive copied · paste into the session</span>`);
-      }).catch(()=>toast("⚠️ launchpad not reachable"));
+    fetch(`/cook?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`).then(r=>r.json()).then(r=>{
+      if(!r.ok){toast("Couldn't dispatch — "+esc(r.error||"failed"));return;}
+      toast(`<span class="em">${esc(r.action)}</span> &nbsp; ${esc(c.label)}<br><span class="sub">Directive copied to clipboard — paste into the session.</span>`);
+    }).catch(()=>toast("Launchpad not reachable"));
   } else {
-    const cmd = c.path ? `cd ${c.path} && claude${c.session_id?` --resume ${c.session_id}`:""}` : "(open Trello)";
-    navigator.clipboard.writeText(cmd).then(()=>toast(`<b>copied command</b><br><span style="color:var(--mut)">${esc(cmd)}</span><br>run <code>python3 serve.py</code> for one-click cook`));
+    const cmd=c.path?`cd ${c.path} && claude`:"(open Trello)";
+    navigator.clipboard.writeText(cmd).then(()=>toast(`<span class="em">Command copied</span><br><span class="sub">${esc(cmd)} — run <code>tasklord serve</code> for one-click dispatch</span>`));
   }
 }
 
 function dismiss(id,ev){
   if(ev) ev.stopPropagation();
   const c=DATA.cards.find(x=>x.id===id);if(!c)return;
-  if(!confirm(`Are you sure you're good on this task?\n\n"${c.label}"\n\nClicking OK removes it and it won't come back on future scans. Cancel keeps it on the board.`))return;
+  if(!confirm(`Are you good on this task?\n\n${c.label}\n\nOK removes it for good — it won't return on future scans. Cancel keeps it.`))return;
   if(TOKEN){
-    fetch(`/dismiss?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`)
-      .then(r=>r.json()).then(r=>{
-        if(!r.ok){toast("⚠️ "+esc(r.error||"failed"));return;}
-        DATA.cards=DATA.cards.filter(x=>x.id!==id);render();
-        toast(`<b>dismissed</b> — ${esc(c.label)} won't come back`);
-      }).catch(()=>toast("⚠️ launchpad not reachable"));
-  } else {
-    DATA.cards=DATA.cards.filter(x=>x.id!==id);render();
-    toast(`<b>hidden this view</b><br><span style="color:var(--mut)">serve the board to dismiss permanently</span>`);
-  }
+    fetch(`/dismiss?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`).then(r=>r.json()).then(r=>{
+      if(!r.ok){toast("Couldn't dismiss — "+esc(r.error||"failed"));return;}
+      DATA.cards=DATA.cards.filter(x=>x.id!==id);render();
+      toast(`<span class="em">Dismissed</span> &nbsp; ${esc(c.label)} won't return`);
+    }).catch(()=>toast("Launchpad not reachable"));
+  } else {DATA.cards=DATA.cards.filter(x=>x.id!==id);render();toast(`<span class="em">Hidden</span> <span class="sub">— serve the board to dismiss for good</span>`);}
 }
 
-function buildAreaFilters(){
-  const wrap=document.getElementById("areaFilters");
-  const areas=DATA.areas||{};
+function buildRail(){
+  const wrap=document.getElementById("rail");const areas=DATA.areas||{};
   const keys=Object.keys(areas).filter(Boolean).sort((a,b)=>areas[b]-areas[a]);
-  if(!keys.length){wrap.innerHTML="";return;}
-  wrap.innerHTML=keys.map(a=>`<span class="chip" data-area="${esc(a)}">${esc(a)} <span style="opacity:.5">${areas[a]}</span></span>`).join("");
-  wrap.onclick=e=>{const ch=e.target.closest(".chip");if(!ch)return;const a=ch.dataset.area;
-    if(state.areas.has(a)){state.areas.delete(a);ch.classList.remove("on");}else{state.areas.add(a);ch.classList.add("on");}render();};
+  if(!keys.length){wrap.style.display="none";return;}
+  wrap.style.display="flex";
+  wrap.innerHTML=keys.map(a=>`<span class="area" data-area="${esc(a)}">${esc(a)}<span class="n">${areas[a]}</span></span>`).join("");
+  wrap.onclick=e=>{const el=e.target.closest(".area");if(!el)return;const a=el.dataset.area;
+    if(state.areas.has(a)){state.areas.delete(a);el.classList.remove("on");}else{state.areas.add(a);el.classList.add("on");}render();};
 }
 
-document.getElementById("srcFilters").addEventListener("click",e=>{
-  const chip=e.target.closest(".chip");if(!chip)return;
-  if(chip.dataset.staleonly){state.staleOnly=!state.staleOnly;chip.classList.toggle("on");}
-  else{const s=chip.dataset.src;if(state.sources.has(s)){state.sources.delete(s);chip.classList.remove("on");}else{state.sources.add(s);chip.classList.add("on");}}
+document.getElementById("toggles").addEventListener("click",e=>{
+  const t=e.target.closest(".tg");if(!t)return;
+  if(t.dataset.staleonly){state.staleOnly=!state.staleOnly;t.classList.toggle("on");}
+  else{const s=t.dataset.src;if(state.sources.has(s)){state.sources.delete(s);t.classList.remove("on");}else{state.sources.add(s);t.classList.add("on");}}
   render();
 });
 document.getElementById("search").addEventListener("input",e=>{state.q=e.target.value;render();});
 
-function boot(d){DATA=d;buildAreaFilters();render();
-  document.getElementById("footer").textContent=`TASK LORD · ${d.total} issues · linear-model · ${JSON.stringify(d.counts)}`;}
+function boot(d){DATA=d;buildRail();render();
+  document.getElementById("footer").textContent=`${d.total} tasks · ${Object.entries(d.counts||{}).map(([k,v])=>`${v} ${k.replace("_"," ")}`).join("  ·  ")}`;}
 fetch("board.json?_="+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json();}).then(boot)
-  .catch(()=>{if(window.BOARD){boot(window.BOARD);return;}
-    document.getElementById("board").innerHTML=`<div class="empty">No data yet — run <code>python3 harvest.py</code>, then reload.</div>`;});
+  .catch(()=>{if(window.BOARD){boot(window.BOARD);return;}document.getElementById("board").innerHTML=`<div class="empty">No data — run <code>tasklord harvest</code>, then reload.</div>`;});
 </script>
 </body>
 </html>
