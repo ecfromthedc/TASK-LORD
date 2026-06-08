@@ -36,9 +36,18 @@ followed immediately by understanding the whole board without effort.
 ink levels — not from borders, fills, or bubbles. A tight, deliberate type
 scale. A refined grotesk for UI; mono for identifiers, paths, and counts.
 
-**Color is signal, never decoration.** A near-black canvas (obsidian/charcoal)
-and a single restrained metallic accent (champagne/platinum register — regal,
-not loud). State and priority are conveyed by the *calmest possible device*:
+**Brand system: Rising Tides — Midnight Press.** Palette and type roles are
+inherited from the carousel agent's `DESIGN-SPECS.md` for cross-surface
+consistency: ink-black with a violet cast (`#0B0710`), aged-cream text
+(`#F3EAD4`), brand violet (`#9546FF`, primary/active), magenta (`#E100C3`,
+urgent energy), old-gold (`#C9A85F`, done seal), ink-red (`#C8301C`, blocked).
+Type roles: Archivo Black (display/masthead), Bodoni Moda (serif titles),
+JetBrains Mono (uppercase tracked labels). Subtle violet/magenta background
+blooms only — the heavy newsprint textures (scanlines, halftone, grain) are for
+static carousel art, not a working board, and are intentionally omitted here.
+
+**Color is signal, never decoration.** State and priority are conveyed by the
+*calmest possible device*:
 
 - **State** → a thin vertical spine on the card's leading edge, keyed by a muted
   state hue. Not a top bar, not a pill. One quiet stripe that the eye reads as

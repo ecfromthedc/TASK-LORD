@@ -5,33 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TASK LORD</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bodoni+Moda:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
   :root{
-    --bg:#0a0a0c; --bg-2:#0c0c10;
-    --surface:#121216; --surface-hi:#17171c;
-    --line:rgba(236,231,221,.07); --line-hi:rgba(236,231,221,.14);
-    --ink:#ece9e1; --ink-mid:#9b988e; --ink-lo:#615e57; --ink-faint:#46443e;
-    --accent:#c8ad7c; --accent-dim:#8f7d59;
-    --st-backlog:#54524b; --st-prog:#c8ad7c; --st-blocked:#b06a5f; --st-done:#5f7367;
-    --urgent:#c77b63;
-    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
-    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;
+    /* Rising Tides — Midnight Press. Dark newsprint, violet cast. On-brand,
+       and far more activating than warm gold: violet=focus/active, magenta=urgent
+       energy, ink-red=blocked, old-gold=done seal. */
+    --bg:#0B0710; --bg-2:#140A1C;
+    --surface:#160c20; --surface-hi:#1e1230;
+    --line:rgba(243,234,212,.10); --line-hi:rgba(243,234,212,.22);
+    --ink:#F3EAD4; --ink-mid:rgba(243,234,212,.62); --ink-lo:rgba(243,234,212,.40); --ink-faint:rgba(243,234,212,.26);
+    --accent:#9546FF; --accent-dim:#7a52c0;
+    --magenta:#E100C3; --gold:#C9A85F; --red:#C8301C;
+    --st-backlog:#6a6172; --st-prog:#9546FF; --st-blocked:#C8301C; --st-done:#C9A85F;
+    --urgent:#E100C3;
+    --display:'Archivo Black','Anton',sans-serif;
+    --serif:'Bodoni Moda','Playfair Display',Georgia,serif;
+    --mono:'JetBrains Mono',ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.5;
-    background:linear-gradient(180deg,#0b0b0e,var(--bg) 40%);
+    background:
+      radial-gradient(760px 540px at 90% -8%, rgba(149,70,255,.14), transparent 60%),
+      radial-gradient(680px 520px at 4% 110%, rgba(225,0,195,.09), transparent 60%),
+      var(--bg);
+    background-attachment:fixed;
     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   }
-  ::selection{background:rgba(200,173,124,.25)}
+  ::selection{background:rgba(149,70,255,.30)}
 
   /* ---- masthead ---- */
   header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:28px;
     padding:18px 30px 16px;background:linear-gradient(180deg,rgba(10,10,12,.96),rgba(10,10,12,.7));
     backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .brand{font-size:13px;letter-spacing:.52em;font-weight:600;text-transform:uppercase;
+  .brand{font-family:var(--display);font-size:18px;letter-spacing:.04em;text-transform:uppercase;
     color:var(--ink);white-space:nowrap}
-  .brand b{color:var(--accent);font-weight:600}
+  .brand b{color:var(--accent)}
+  .kick{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--ink-faint);white-space:nowrap;align-self:center}
   .stat{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);letter-spacing:.04em;white-space:nowrap}
   .stat .live{color:var(--accent-dim)}
   .grow{flex:1}
@@ -41,7 +54,7 @@
   .search::placeholder{color:var(--ink-faint)}
   .search:focus{border-color:var(--line-hi);width:240px}
   .toggles{display:flex;gap:18px;align-items:center}
-  .tg{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);
+  .tg{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);
     cursor:pointer;user-select:none;padding-bottom:3px;border-bottom:1px solid transparent;transition:.15s}
   .tg:hover{color:var(--ink-mid)}
   .tg.on{color:var(--ink);border-bottom-color:var(--accent)}
@@ -65,7 +78,7 @@
   .col-h{position:sticky;top:71px;z-index:10;display:flex;align-items:baseline;gap:10px;
     padding:16px 22px 12px;background:var(--bg);border-top:2px solid var(--ch);
     margin-bottom:2px}
-  .col-h .t{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mid)}
+  .col-h .t{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-mid)}
   .col-h .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);margin-left:auto}
   .col.backlog{--ch:var(--st-backlog)} .col.in_progress{--ch:var(--st-prog)}
   .col.blocked{--ch:var(--st-blocked)} .col.done{--ch:var(--st-done)}
@@ -81,16 +94,16 @@
   .card:hover{background:var(--surface-hi);border-color:var(--line-hi)}
 
   .eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:7px;
-    font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-lo);min-height:12px}
-  .eyebrow .ident{font-family:var(--mono);letter-spacing:.06em;color:var(--ink-faint)}
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-lo);min-height:12px}
+  .eyebrow .ident{letter-spacing:.08em;color:var(--ink-faint)}
   .eyebrow .sep{color:var(--ink-faint);opacity:.55}
   .eyebrow .prio.urgent{color:var(--urgent)} .eyebrow .prio.high{color:var(--accent)}
 
-  .title{font-size:13.5px;font-weight:600;color:var(--ink);letter-spacing:.005em;
-    margin-bottom:5px;word-break:break-word}
+  .title{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);
+    letter-spacing:0;margin-bottom:6px;word-break:break-word;line-height:1.2}
   .summary{font-size:12px;color:var(--ink-mid);margin-bottom:2px}
   .line{font-size:11.5px;margin-top:6px;color:var(--ink-mid)}
-  .line .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-lo);margin-right:7px}
+  .line .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-lo);margin-right:7px}
   .line.blocked .k{color:var(--st-blocked)}
   .line.next .k{color:var(--accent-dim)}
 
@@ -131,6 +144,7 @@
 <body>
 <header>
   <span class="brand">Task <b>Lord</b></span>
+  <span class="kick">Rising Tides · The Midnight Press</span>
   <span class="stat" id="stat">loading</span>
   <span class="grow"></span>
   <input class="search" id="search" placeholder="Filter" />
