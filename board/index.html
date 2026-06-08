@@ -18,7 +18,7 @@
     --magenta:#E100C3; --gold:#C9A85F; --red:#C8301C;
     --st-backlog:#6a6172; --st-prog:#9546FF; --st-blocked:#C8301C; --st-done:#C9A85F;
     --urgent:#E100C3;
-    --display:'Archivo Black','Anton',sans-serif;
+    --display:'Helvetica Neue','Inter','Helvetica',Arial,sans-serif;
     --serif:'Bodoni Moda','Playfair Display',Georgia,serif;
     --mono:'JetBrains Mono',ui-monospace,"SF Mono",Menlo,monospace;
     --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -40,11 +40,12 @@
   header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:28px;
     padding:18px 30px 16px;background:linear-gradient(180deg,rgba(10,10,12,.96),rgba(10,10,12,.7));
     backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .brand{font-family:var(--display);font-size:18px;letter-spacing:.04em;text-transform:uppercase;
-    color:var(--ink);white-space:nowrap}
-  .brand b{color:var(--accent)}
-  .kick{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;
-    color:var(--ink-faint);white-space:nowrap;align-self:center}
+  .brand{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.025em;
+    text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1}
+  .brand b{color:var(--accent);font-weight:800}
+  .vr{width:1px;height:18px;background:var(--line-hi);align-self:center}
+  .kick{font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--ink-faint);white-space:nowrap;align-self:center;line-height:1.35}
   .stat{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);letter-spacing:.04em;white-space:nowrap}
   .stat .live{color:var(--accent-dim)}
   .grow{flex:1}
@@ -144,7 +145,8 @@
 <body>
 <header>
   <span class="brand">Task <b>Lord</b></span>
-  <span class="kick">Rising Tides · The Midnight Press</span>
+  <span class="vr"></span>
+  <span class="kick">Rising&nbsp;Tides<br>Midnight&nbsp;Press</span>
   <span class="stat" id="stat">loading</span>
   <span class="grow"></span>
   <input class="search" id="search" placeholder="Filter" />
