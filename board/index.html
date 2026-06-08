@@ -149,6 +149,32 @@
   .card:hover .dismiss{opacity:.7}
   .dismiss:hover{opacity:1;color:var(--st-blocked)}
 
+  /* ---- triage / multi-select clear ---- */
+  .colsel{display:none;margin-left:14px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-faint);background:none;border:none;cursor:pointer;padding:0;transition:color .14s}
+  body.triage .colsel{display:inline}
+  .colsel:hover{color:var(--accent)}
+  .cbx{display:none;position:absolute;top:11px;right:12px;width:14px;height:14px;
+    border:1px solid var(--line-hi);background:var(--bg-2);transition:background .12s,border-color .12s}
+  body.triage .cbx{display:block}
+  body.triage .card{cursor:pointer;user-select:none}
+  body.triage .act,body.triage .dismiss{display:none}
+  .card.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .card.sel .cbx{background:var(--accent);border-color:var(--accent)}
+  .card.sel .cbx::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+    border:solid var(--bg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+  #selbar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);
+    display:none;align-items:center;gap:16px;background:var(--surface-hi);border:1px solid var(--line-hi);
+    padding:11px 18px;z-index:70;box-shadow:0 18px 50px rgba(0,0,0,.55);opacity:0;transition:opacity .18s,transform .18s}
+  #selbar.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+  #selbar .ct{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink);font-variant-numeric:tabular-nums}
+  #selbar button{background:none;border:none;cursor:pointer;font-family:var(--sans);font-size:11.5px;
+    letter-spacing:.02em;color:var(--ink-mid);padding:0;transition:color .14s}
+  #selbar button:hover{color:var(--ink)}
+  #selbar .danger{color:var(--red)} #selbar .danger:hover{color:#e8543f}
+  #selbar .dim{opacity:.4;cursor:default;pointer-events:none}
+  #selbar .vr2{width:1px;height:16px;background:var(--line-hi)}
+
   .empty{color:var(--ink-faint);font-size:11px;letter-spacing:.04em;padding:14px 22px}
 
   footer{padding:18px 30px 26px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);
@@ -177,18 +203,21 @@
     <span class="tg on" data-src="code">Code</span>
     <span class="tg on" data-src="business">Business</span>
     <span class="tg" data-staleonly="1">Stalled</span>
+    <span class="vr"></span>
+    <span class="tg" data-triage="1">Triage</span>
   </div>
 </header>
 <div class="rail" id="rail"></div>
 <div class="board" id="board"></div>
 <footer id="footer"></footer>
 <div id="toast"></div>
+<div id="selbar"></div>
 
 <script src="board.js" onerror="window.__noboardjs=1"></script>
 <script>
 const COLS=[["backlog","Backlog"],["in_progress","In Progress"],["blocked","Blocked"],["done","Done"]];
 let DATA={cards:[]};
-const state={sources:new Set(["session","code","business"]),areas:new Set(),staleOnly:false,q:""};
+const state={sources:new Set(["session","code","business"]),areas:new Set(),staleOnly:false,q:"",triage:false,selected:new Set()};
 const TOKEN=window.TASKLORD_TOKEN||null;
 
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -211,7 +240,8 @@ function cardHTML(c){
   const gutter=g.length?`<div class="gutter">${g.join("")}</div>`:"";
   const path=c.path?`<div class="path">${esc(c.path)}</div>`:"";
   const verb=c.source==="session"?"Continue in a fresh session":c.source==="business"?"Open in Trello":"Cook a fresh session";
-  return `<div class="card s-${c.status}">
+  return `<div class="card s-${c.status}${state.selected.has(c.id)?' sel':''}" data-id="${esc(c.id)}">
+    <span class="cbx" aria-hidden="true"></span>
     <button class="dismiss" title="Dismiss — won't return" onclick='dismiss(${JSON.stringify(c.id)},event)'>×</button>
     ${eyebrow}
     <div class="title">${esc(c.label)}</div>
@@ -232,7 +262,7 @@ function render(){
   document.getElementById("board").innerHTML=COLS.map(([k,t],i)=>{
     const list=cards.filter(c=>c.status===k);
     const inner=list.length?`<div class="stack">${list.map(cardHTML).join("")}</div>`:`<div class="empty">Clear</div>`;
-    return `<section class="col ${k}"><div class="col-h"><span class="ix">${String(i+1).padStart(2,"0")}</span><span class="sl">/</span><span class="t">${t}</span><span class="n">${list.length}</span></div>${inner}</section>`;
+    return `<section class="col ${k}"><div class="col-h"><span class="ix">${String(i+1).padStart(2,"0")}</span><span class="sl">/</span><span class="t">${t}</span><span class="n">${list.length}</span><button class="colsel" data-col="${k}">select all</button></div>${inner}</section>`;
   }).join("");
   document.getElementById("stat").innerHTML=`${cards.length} of ${DATA.total||DATA.cards.length} &nbsp; ${fmt(DATA.generated_at)} &nbsp; <span class="live">${TOKEN?"live":"read-only"}</span>`;
 }
@@ -278,11 +308,72 @@ function buildRail(){
 
 document.getElementById("toggles").addEventListener("click",e=>{
   const t=e.target.closest(".tg");if(!t)return;
+  if(t.dataset.triage){state.triage=!state.triage;t.classList.toggle("on");
+    document.body.classList.toggle("triage",state.triage);
+    if(!state.triage)state.selected.clear();render();updateSelbar();return;}
   if(t.dataset.staleonly){state.staleOnly=!state.staleOnly;t.classList.toggle("on");}
   else{const s=t.dataset.src;if(state.sources.has(s)){state.sources.delete(s);t.classList.remove("on");}else{state.sources.add(s);t.classList.add("on");}}
   render();
 });
 document.getElementById("search").addEventListener("input",e=>{state.q=e.target.value;render();});
+
+// ---- triage: multi-select + bulk clear ----
+document.getElementById("board").addEventListener("click",e=>{
+  if(!state.triage)return;
+  const cs=e.target.closest(".colsel");
+  if(cs){selectColumn(cs.dataset.col);return;}
+  const card=e.target.closest(".card");
+  if(card&&card.dataset.id){
+    const id=card.dataset.id;
+    if(state.selected.has(id))state.selected.delete(id);else state.selected.add(id);
+    card.classList.toggle("sel",state.selected.has(id));
+    updateSelbar();
+  }
+});
+function selectColumn(k){
+  const sec=document.querySelector(`section.col.${k}`);if(!sec)return;
+  const cards=[...sec.querySelectorAll(".card")];if(!cards.length)return;
+  const allSel=cards.every(c=>state.selected.has(c.dataset.id));
+  cards.forEach(c=>{const id=c.dataset.id;if(allSel){state.selected.delete(id);c.classList.remove("sel");}else{state.selected.add(id);c.classList.add("sel");}});
+  updateSelbar();
+}
+function selectAllVisible(){
+  const cards=[...document.querySelectorAll("#board .card")];
+  const allSel=cards.length&&cards.every(c=>state.selected.has(c.dataset.id));
+  cards.forEach(c=>{const id=c.dataset.id;if(allSel){state.selected.delete(id);c.classList.remove("sel");}else{state.selected.add(id);c.classList.add("sel");}});
+  updateSelbar();
+}
+function exitTriage(){state.triage=false;state.selected.clear();document.body.classList.remove("triage");
+  document.querySelector('.tg[data-triage]')?.classList.remove("on");render();updateSelbar();}
+function updateSelbar(){
+  const bar=document.getElementById("selbar");
+  if(!state.triage){bar.classList.remove("show");return;}
+  const n=state.selected.size;
+  bar.innerHTML=`<span class="ct">${n} selected</span>
+    <button onclick="selectAllVisible()">Select all visible</button>
+    <span class="vr2"></span>
+    <button class="danger${n?"":" dim"}" onclick="clearSelected()">Clear ${n} permanently</button>
+    <span class="vr2"></span>
+    <button onclick="exitTriage()">Exit triage</button>`;
+  bar.classList.add("show");
+}
+function clearSelected(){
+  const ids=[...state.selected];
+  if(!ids.length){toast("Nothing selected");return;}
+  if(!confirm(`Permanently clear ${ids.length} task${ids.length>1?"s":""}?\n\nThey won't return on future scans.`))return;
+  if(TOKEN){
+    fetch(`/dismiss_bulk?ids=${encodeURIComponent(ids.join(","))}&reason=triage&token=${encodeURIComponent(TOKEN)}`).then(r=>r.json()).then(r=>{
+      if(!r.ok){toast("Couldn't clear — "+esc(r.error||"failed"));return;}
+      DATA.cards=DATA.cards.filter(x=>!state.selected.has(x.id));
+      state.selected.clear();render();updateSelbar();
+      toast(`<span class="em">Cleared</span> &nbsp; ${r.dismissed} removed for good`);
+    }).catch(()=>toast("Launchpad not reachable"));
+  } else {
+    DATA.cards=DATA.cards.filter(x=>!state.selected.has(x.id));
+    state.selected.clear();render();updateSelbar();
+    toast(`<span class="em">Hidden</span> <span class="sub">— serve the board to clear for good</span>`);
+  }
+}
 
 function boot(d){DATA=d;buildRail();
   document.body.classList.add("booting");render();

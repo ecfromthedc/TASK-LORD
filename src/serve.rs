@@ -201,6 +201,35 @@ async fn dismiss(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, St
     }
 }
 
+/// Triage bulk-clear: permanently dismiss a comma-separated set of card ids in
+/// one call, then regenerate board.json once. Powers the board's triage mode.
+async fn dismiss_bulk(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> impl IntoResponse {
+    if q.get("token").map(|t| t != &app.token).unwrap_or(true) {
+        return Json(serde_json::json!({"ok": false, "error": "bad token"}));
+    }
+    let ids: Vec<String> = q
+        .get("ids")
+        .map(|s| s.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()).map(String::from).collect())
+        .unwrap_or_default();
+    if ids.is_empty() {
+        return Json(serde_json::json!({"ok": false, "error": "no ids"}));
+    }
+    let reason = q.get("reason").cloned().unwrap_or_else(|| "triage".into());
+    let mut dismissed = 0u32;
+    for id in &ids {
+        if store::dismiss(id, &reason).is_ok() {
+            dismissed += 1;
+        }
+    }
+    if let Ok(b) = store::export_board() {
+        let _ = std::fs::write(
+            config::board_dir().join("board.json"),
+            serde_json::to_string_pretty(&b).unwrap_or_default(),
+        );
+    }
+    Json(serde_json::json!({"ok": true, "dismissed": dismissed}))
+}
+
 async fn refresh(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> impl IntoResponse {
     if q.get("token").map(|t| t != &app.token).unwrap_or(true) {
         return Redirect::to("/");
@@ -223,6 +252,7 @@ pub async fn run() -> anyhow::Result<()> {
         .route("/board.js", get(board_js))
         .route("/cook", get(cook))
         .route("/dismiss", get(dismiss))
+        .route("/dismiss_bulk", get(dismiss_bulk))
         .route("/refresh", get(refresh))
         .with_state(app);
 
