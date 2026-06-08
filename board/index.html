@@ -104,6 +104,11 @@
     color:var(--ink);padding:8px;border-radius:9px;font-size:11px;font-weight:650;
     letter-spacing:.1em;text-transform:uppercase;transition:.15s}
   .cook:hover{box-shadow:0 0 22px rgba(255,113,206,.3);background:linear-gradient(90deg,rgba(255,113,206,.22),rgba(33,212,253,.16))}
+  .dismiss{position:absolute;top:8px;right:9px;width:20px;height:20px;line-height:18px;
+    text-align:center;border-radius:6px;cursor:pointer;color:var(--faint);font-size:13px;
+    border:1px solid transparent;transition:.15s;opacity:0}
+  .card:hover .dismiss{opacity:1}
+  .dismiss:hover{color:var(--pink);border-color:var(--line-hi);background:rgba(255,113,206,.08)}
   .empty{color:var(--faint);padding:22px;text-align:center;font-size:11px;letter-spacing:.05em}
   footer{color:var(--faint);font-size:10.5px;text-align:center;padding:18px;letter-spacing:.06em}
 
@@ -160,6 +165,7 @@ function cardHTML(c){
   const path=c.path?`<div class="path">${esc(c.path)}</div>`:"";
   const verb=c.source==="session"?"▶ continue · fresh + handoff":c.source==="business"?"↗ open trello":"🔥 cook";
   return `<div class="card">
+    <div class="dismiss" title="Done with this? Remove it for good" onclick='dismiss(${JSON.stringify(c.id)},event)'>✕</div>
     <div class="meta-row">${ident}${area}${type}${prio}</div>
     <div class="name">${esc(c.label)}</div>
     ${c.left_off&&c.left_off!=="—"?`<div class="leftoff">${esc(c.left_off)}</div>`:""}
@@ -202,6 +208,23 @@ function cook(id){
   } else {
     const cmd = c.path ? `cd ${c.path} && claude${c.session_id?` --resume ${c.session_id}`:""}` : "(open Trello)";
     navigator.clipboard.writeText(cmd).then(()=>toast(`<b>copied command</b><br><span style="color:var(--mut)">${esc(cmd)}</span><br>run <code>python3 serve.py</code> for one-click cook`));
+  }
+}
+
+function dismiss(id,ev){
+  if(ev) ev.stopPropagation();
+  const c=DATA.cards.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`Are you sure you're good on this task?\n\n"${c.label}"\n\nClicking OK removes it and it won't come back on future scans. Cancel keeps it on the board.`))return;
+  if(TOKEN){
+    fetch(`/dismiss?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`)
+      .then(r=>r.json()).then(r=>{
+        if(!r.ok){toast("⚠️ "+esc(r.error||"failed"));return;}
+        DATA.cards=DATA.cards.filter(x=>x.id!==id);render();
+        toast(`<b>dismissed</b> — ${esc(c.label)} won't come back`);
+      }).catch(()=>toast("⚠️ launchpad not reachable"));
+  } else {
+    DATA.cards=DATA.cards.filter(x=>x.id!==id);render();
+    toast(`<b>hidden this view</b><br><span style="color:var(--mut)">serve the board to dismiss permanently</span>`);
   }
 }
 

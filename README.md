@@ -41,25 +41,25 @@ by default), so nothing leaves your machine and it costs nothing to run.
 
 ## Requirements
 
-- macOS (uses launchd for scheduling; the harvester/board are cross-platform)
-- Python 3.10+
+- [Rust](https://rustup.rs) (stable) — `cargo` to build
+- macOS for the cook/launchpad features (Terminal + launchd); the harvester and
+  board are cross-platform
 - [Ollama](https://ollama.com) with a model pulled: `ollama pull llama3.1:8b`
 - Optional: [`trello` CLI](https://www.npmjs.com/package/trello-cli) for the
   business swimlane
-
-No Python dependencies — standard library only.
 
 ## Quick start
 
 ```bash
 git clone https://github.com/<you>/TASK-LORD.git tasklord
 cd tasklord
+cargo build --release
 
-python3 harvest.py        # scan sources, summarize, build the board (uses Ollama)
-python3 serve.py          # open the live board — click a card to resume work
+./target/release/tasklord harvest   # scan sources, summarize, build the board
+./target/release/tasklord serve     # open the live launchpad — click to cook
 ```
 
-Don't want the LLM? `python3 harvest.py --no-llm` uses fast heuristics instead.
+Don't want the LLM? `tasklord harvest --no-llm` uses fast heuristics instead.
 
 > **macOS tip:** clone outside `~/Documents`, `~/Desktop`, `~/Downloads`.
 > launchd (used for nightly refresh) can't touch those folders without Full
@@ -67,16 +67,22 @@ Don't want the LLM? `python3 harvest.py --no-llm` uses fast heuristics instead.
 
 ## Cook — click a card, land back in the work
 
-Served by `serve.py` (loopback-only, per-run security token). Clicking a card:
+Served by `tasklord serve` (loopback-only, per-run security token). Clicking a card:
 
-- **session** → opens your terminal in the project and runs
-  `claude --resume <session-id>` — the *exact* conversation — and copies a
-  directive prompt to your clipboard to paste.
+- **session** → distills the prior session into a **context handoff doc**, then
+  opens your terminal in the project and starts a **fresh** `claude` — clean
+  context window, full continuity — with a directive on your clipboard to paste.
 - **code** → fresh `claude` in the project, with the directive on your clipboard.
 - **business** → opens the Trello board.
 
-The directive tells the resumed agent to check TASK LORD first, work the issue's
-next step, then update the issue so the board stays truthful.
+The directive tells the new agent to read the handoff, check TASK LORD, work the
+issue's next step, then update the issue so the board stays truthful.
+
+## Dismiss — ✕ a task you're done with
+
+Hover a card and click **✕**. After an "are you sure?" confirm, the task is
+removed and added to a `dismissals` table so it **never repopulates** on future
+scans. Restore with `tasklord undismiss -- <id>`.
 
 ## Nightly auto-refresh (macOS)
 
@@ -107,24 +113,28 @@ State lives in **SQLite** (`tasklord.db`), modeled on Linear:
 do (Script, Edit, Publish, Build, Bug, Outreach, Proposal, Decision…). The
 harvester infers a type per issue from keyword hints; edit the rows to teach it.
 
-Configure your areas, scan roots, and task types by editing the seed lists in
-`store.py` and `sources_code.py`.
+Configure your areas, scan roots, and task types by editing the seed tables in
+`src/config.rs`.
 
 ## Layout
 
 ```
-harvest.py              orchestrator: sources → Ollama → SQLite → board.json
-store.py                SQLite store (Linear data model) — source of truth
-serve.py                launchpad server: serves the board + /cook click-to-launch
-ollama_client.py        local LLM client (urllib, no deps)
-sources_transcripts.py  session loose-ends from jsonl tails (+ session UUID)
-sources_code.py         git/plan facts for code projects
-sources_trello.py       business workstreams via the trello CLI (board rollup)
-board/index.html        Kanban UI (dark vaporwave) with cook buttons
+src/main.rs             CLI (clap): harvest · serve · dismiss · undismiss
+src/config.rs           paths + seed taxonomy (areas, states, task types)
+src/model.rs            shared data shapes
+src/ollama.rs           local LLM client (reqwest)
+src/store.rs            SQLite store (Linear data model) — source of truth
+src/harvest.rs          orchestrator: sources → Ollama → SQLite → board.json
+src/handoff.rs          session → context handoff doc (map-reduce for big ones)
+src/serve.rs            axum launchpad: serves board + /cook + /dismiss
+src/sources/            transcripts · code · trello scanners
+board/index.html        Kanban UI (dark vaporwave) — cook + dismiss
 run.sh                  nightly wrapper (ensures Ollama is up, logs)
 install.sh              registers the launchd nightly agent
 scheduler/*.template    launchd plist template (filled in by install.sh)
 ```
+
+Built with **tokio · axum · rusqlite · reqwest · clap**.
 
 See `GOAL.md` for the design north-star.
 

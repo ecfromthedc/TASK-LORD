@@ -1,5 +1,5 @@
 # Private data — your real projects, sessions, Trello boards live here. Never commit.
-tasklord.db
+tasklord.db*
 tasklord.db-journal
 tasklord.db-wal
 tasklord.db-shm
@@ -11,7 +11,10 @@ handoffs/
 # Generated from template by install.sh
 scheduler/com.tasklord.plist
 
-# Python
+# Rust
+/target/
+
+# Python (legacy reference)
 __pycache__/
 *.pyc
 *.pyo

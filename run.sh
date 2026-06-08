@@ -16,5 +16,11 @@ fi
 
 echo "[$(date)] harvest start" >> "$LOG"
 cd "$HERE"
-python3 harvest.py >> "$LOG" 2>&1
+# Prefer the release binary; fall back to building it if missing.
+BIN="$HERE/target/release/tasklord"
+if [ ! -x "$BIN" ]; then
+  echo "[$(date)] building release binary" >> "$LOG"
+  cargo build --release >> "$LOG" 2>&1
+fi
+"$BIN" harvest >> "$LOG" 2>&1
 echo "[$(date)] harvest done" >> "$LOG"
