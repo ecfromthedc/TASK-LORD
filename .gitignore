@@ -6,6 +6,7 @@ tasklord.db-shm
 board/board.json
 board/board.js
 logs/
+handoffs/
 
 # Generated from template by install.sh
 scheduler/com.tasklord.plist

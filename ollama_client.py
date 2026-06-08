@@ -41,6 +41,26 @@ def generate_json(prompt: str, model: str = DEFAULT_MODEL, timeout: int = 120) -
         return {}
 
 
+def generate_text(prompt: str, model: str = DEFAULT_MODEL, timeout: int = 180) -> str:
+    """Call Ollama for free-form text. Returns '' on any failure."""
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.2, "num_ctx": 8192},
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        OLLAMA_URL, data=data, headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        return body.get("response", "").strip()
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError):
+        return ""
+
+
 def is_up() -> bool:
     try:
         req = urllib.request.Request("http://localhost:11434/api/tags")

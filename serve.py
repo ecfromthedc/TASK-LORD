@@ -26,6 +26,8 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import handoff
+
 HERE = Path(__file__).resolve().parent
 BOARD_DIR = HERE / "board"
 TOKEN = secrets.token_urlsafe(18)
@@ -47,14 +49,21 @@ def _card_by_id(card_id: str) -> dict | None:
 TASKLORD_DIR = HERE
 
 
-def _directive_prompt(card: dict) -> str:
-    """The prompt copied to the clipboard for Eric to paste into the session.
-    Directs the agent to consult TASK LORD first, then work the task."""
+def _directive_prompt(card: dict, handoff_path=None) -> str:
+    """The prompt copied to the clipboard to paste into the fresh session.
+    Points the new agent at the handoff doc + TASK LORD, then the next step."""
     label = card.get("label", "this project")
-    lines = [
-        f"First, check TASK LORD for current state: the SQLite board at "
-        f"{TASKLORD_DIR}/tasklord.db (tables: projects, issues, updates, task_types). "
-        f"Query this issue's history before acting.",
+    lines = []
+    if handoff_path:
+        lines += [
+            f"Read the context handoff first: {handoff_path}",
+            "It distills a prior session on this project so you can continue in a "
+            "fresh context window. After reading it, pick up the work.",
+            "",
+        ]
+    lines += [
+        f"Also check TASK LORD for state/history: the SQLite board at "
+        f"{TASKLORD_DIR}/tasklord.db (tables: projects, issues, updates, task_types).",
         "",
         f"Project: {label}",
     ]
@@ -68,8 +77,8 @@ def _directive_prompt(card: dict) -> str:
         lines.append(f"Your task (next step): {card['next_step']}")
     lines += [
         "",
-        "Pick up from here. When you finish or change state, update the TASK LORD "
-        "issue (status, left_off, next_step) so the board stays truthful.",
+        "When you finish or change state, update the TASK LORD issue (status, "
+        "left_off, next_step) so the board stays truthful.",
     ]
     return "\n".join(lines)
 
@@ -102,14 +111,11 @@ def _cook(card: dict, dry: bool = False) -> dict:
     src = card.get("source")
     path = card.get("path")
 
-    # Always put the directive prompt on the clipboard to paste into the session.
-    directive = _directive_prompt(card)
-    if not dry:
-        _pbcopy(directive)
-
     if src == "business":
         url = path or "https://trello.com"
+        directive = _directive_prompt(card)
         if not dry:
+            _pbcopy(directive)
             webbrowser.open(url)
         return {"ok": True, "action": "opened Trello", "target": url,
                 "clipboard": "directive copied"}
@@ -117,19 +123,23 @@ def _cook(card: dict, dry: bool = False) -> dict:
     if not path:
         return {"ok": False, "error": "no project path for this card"}
 
-    cd = f"cd {shlex.quote(path)} || {{ echo 'path gone'; exit 1; }}"
+    # Session card: distill the old session into a handoff, then start FRESH in
+    # the same dir — clean context window, full continuity.
+    handoff_path = None
     if src == "session" and card.get("session_id"):
-        run = f"{shlex.quote(CLAUDE)} --resume {shlex.quote(card['session_id'])}"
-        action = "resume exact session"
-    else:
-        run = shlex.quote(CLAUDE)  # fresh; paste the clipboard directive
-        action = "fresh session"
-    cmd = f"{cd}\nexec {run}"
+        h = handoff.build_handoff(card["id"], card["session_id"], card)
+        handoff_path = str(h) if h else None
+
+    directive = _directive_prompt(card, handoff_path)
+    cd = f"cd {shlex.quote(path)} || {{ echo 'path gone'; exit 1; }}"
+    cmd = f"{cd}\nexec {shlex.quote(CLAUDE)}"   # always fresh; paste the directive
+    action = "fresh session + handoff" if handoff_path else "fresh session"
     if dry:
         return {"ok": True, "dry": True, "action": action, "cmd": cmd,
-                "clipboard": directive}
+                "handoff": handoff_path, "clipboard": directive}
+    _pbcopy(directive)
     _launch_terminal(cmd)
-    return {"ok": True, "action": action, "path": path,
+    return {"ok": True, "action": action, "path": path, "handoff": handoff_path,
             "clipboard": "directive copied — paste into the session"}
 
 

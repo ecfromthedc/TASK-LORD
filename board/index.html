@@ -158,7 +158,7 @@ function cardHTML(c){
   const stale=c.stale?`<span class="tag stale">${esc(idle(c.days_idle))}</span>`:(c.days_idle!=null?`<span class="tag">${esc(idle(c.days_idle))}</span>`:"");
   const dirty=c.git&&c.git.dirty?`<span class="tag dirty">● ${c.git.dirty_count} uncommitted</span>`:"";
   const path=c.path?`<div class="path">${esc(c.path)}</div>`:"";
-  const verb=c.source==="session"?"▶ resume session":c.source==="business"?"↗ open trello":"🔥 cook";
+  const verb=c.source==="session"?"▶ continue · fresh + handoff":c.source==="business"?"↗ open trello":"🔥 cook";
   return `<div class="card">
     <div class="meta-row">${ident}${area}${type}${prio}</div>
     <div class="name">${esc(c.label)}</div>
