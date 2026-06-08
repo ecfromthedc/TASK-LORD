@@ -46,7 +46,7 @@
   .vr{width:1px;height:18px;background:var(--line-hi);align-self:center}
   .kick{font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;
     color:var(--ink-faint);white-space:nowrap;align-self:center;line-height:1.35}
-  .stat{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);letter-spacing:.04em;white-space:nowrap}
+  .stat{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);letter-spacing:.04em;white-space:nowrap;font-variant-numeric:tabular-nums}
   .stat .live{color:var(--accent-dim)}
   .grow{flex:1}
   .search{appearance:none;background:var(--surface);border:1px solid var(--line);
@@ -79,8 +79,10 @@
   .col-h{position:sticky;top:71px;z-index:10;display:flex;align-items:baseline;gap:10px;
     padding:16px 22px 12px;background:var(--bg);border-top:2px solid var(--ch);
     margin-bottom:2px}
+  .col-h .ix{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--accent-dim);font-variant-numeric:tabular-nums}
+  .col-h .sl{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin:0 2px}
   .col-h .t{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-mid)}
-  .col-h .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);margin-left:auto}
+  .col-h .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-lo);margin-left:auto;font-variant-numeric:tabular-nums}
   .col.backlog{--ch:var(--st-backlog)} .col.in_progress{--ch:var(--st-prog)}
   .col.blocked{--ch:var(--st-blocked)} .col.done{--ch:var(--st-done)}
   .stack{display:flex;flex-direction:column;gap:10px;padding:0 16px;min-width:0}
@@ -109,7 +111,7 @@
   .line.next .k{color:var(--accent-dim)}
 
   .gutter{display:flex;gap:14px;margin-top:11px;font-family:var(--mono);font-size:10px;
-    color:var(--ink-faint);letter-spacing:.02em}
+    color:var(--ink-faint);letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .path{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:7px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7}
 
@@ -207,10 +209,10 @@ function render(){
     if(q && !((c.label||"").toLowerCase().includes(q)||(c.left_off||"").toLowerCase().includes(q)||(c.next_step||"").toLowerCase().includes(q)||(c.path||"").toLowerCase().includes(q)||(c.type||"").toLowerCase().includes(q)))return false;
     return true;
   });
-  document.getElementById("board").innerHTML=COLS.map(([k,t])=>{
+  document.getElementById("board").innerHTML=COLS.map(([k,t],i)=>{
     const list=cards.filter(c=>c.status===k);
     const inner=list.length?`<div class="stack">${list.map(cardHTML).join("")}</div>`:`<div class="empty">Clear</div>`;
-    return `<section class="col ${k}"><div class="col-h"><span class="t">${t}</span><span class="n">${list.length}</span></div>${inner}</section>`;
+    return `<section class="col ${k}"><div class="col-h"><span class="ix">${String(i+1).padStart(2,"0")}</span><span class="sl">/</span><span class="t">${t}</span><span class="n">${list.length}</span></div>${inner}</section>`;
   }).join("");
   document.getElementById("stat").innerHTML=`${cards.length} of ${DATA.total||DATA.cards.length} &nbsp; ${fmt(DATA.generated_at)} &nbsp; <span class="live">${TOKEN?"live":"read-only"}</span>`;
 }
