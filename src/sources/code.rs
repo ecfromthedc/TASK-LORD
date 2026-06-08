@@ -12,7 +12,6 @@ const PLAN_FILES: &[&str] = &["task_plan.md", "progress.md", "findings.md", "TOD
 pub struct CodeFacts {
     pub path: String,
     pub label: String,
-    pub is_git: bool,
     pub git: Option<GitInfo>,
     pub last_commit: Option<String>,
 }
@@ -40,7 +39,6 @@ fn facts_for(dir: &Path) -> Option<CodeFacts> {
     let mut facts = CodeFacts {
         path,
         label,
-        is_git,
         git: None,
         last_commit: None,
     };

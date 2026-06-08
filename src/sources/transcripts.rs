@@ -143,11 +143,10 @@ pub fn collect() -> Vec<Card> {
         }
         let session_id = newest.file_stem().and_then(|s| s.to_str()).map(|s| s.to_string());
         out.push(Card {
-            id: group_name.clone(),
+            id: group_name,
             source: "session".into(),
             label,
             path: parsed.cwd,
-            group: Some(group_name),
             session_id,
             last_activity: parsed.last_activity,
             msg_count: Some(parsed.msg_count as i64),

@@ -27,8 +27,6 @@ pub struct Card {
     // internal-only, not part of the issue record
     #[serde(skip)]
     pub tail: String,
-    #[serde(skip)]
-    pub group: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
