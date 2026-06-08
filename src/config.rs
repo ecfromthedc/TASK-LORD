@@ -123,5 +123,10 @@ pub fn state_to_column(state: &str) -> &'static str {
 }
 
 pub const OLLAMA_URL: &str = "http://localhost:11434";
-pub const OLLAMA_MODEL: &str = "llama3.1:8b";
 pub const SERVE_PORT: u16 = 7666;
+
+/// Local model used for summaries + handoffs. Override with TASKLORD_MODEL,
+/// e.g. `TASKLORD_MODEL=deepseek-r1:14b` for more reasoning power.
+pub fn ollama_model() -> String {
+    std::env::var("TASKLORD_MODEL").unwrap_or_else(|_| "deepseek-r1:8b".into())
+}

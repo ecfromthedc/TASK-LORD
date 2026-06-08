@@ -12,46 +12,72 @@ fn client(timeout_secs: u64) -> reqwest::Client {
         .expect("reqwest client")
 }
 
+/// Strip reasoning-model `<think>...</think>` blocks if any leak through.
+fn strip_think(s: &str) -> String {
+    let mut out = s.to_string();
+    while let (Some(a), Some(b)) = (out.find("<think>"), out.find("</think>")) {
+        if b > a {
+            out.replace_range(a..b + "</think>".len(), "");
+        } else {
+            break;
+        }
+    }
+    out.trim().to_string()
+}
+
+/// Best-effort: pull the first {...} JSON object out of a noisy string.
+fn extract_json(s: &str) -> Option<&str> {
+    let start = s.find('{')?;
+    let end = s.rfind('}')?;
+    if end > start {
+        Some(&s[start..=end])
+    } else {
+        None
+    }
+}
+
 /// Ask Ollama in JSON mode and deserialize into `T`. Returns None on any failure.
 pub async fn generate_json<T: DeserializeOwned>(prompt: &str) -> Option<T> {
     let body = json!({
-        "model": config::OLLAMA_MODEL,
+        "model": config::ollama_model(),
         "prompt": prompt,
         "stream": false,
         "format": "json",
         "options": { "temperature": 0.1, "num_ctx": 8192 }
     });
-    let resp = client(180)
+    let resp = client(240)
         .post(format!("{}/api/generate", config::OLLAMA_URL))
         .json(&body)
         .send()
         .await
         .ok()?;
     let v: serde_json::Value = resp.json().await.ok()?;
-    let raw = v.get("response")?.as_str()?.trim().to_string();
+    let raw = strip_think(v.get("response")?.as_str()?);
     if raw.is_empty() {
         return None;
     }
-    serde_json::from_str::<T>(&raw).ok()
+    serde_json::from_str::<T>(&raw)
+        .ok()
+        .or_else(|| extract_json(&raw).and_then(|j| serde_json::from_str::<T>(j).ok()))
 }
 
 /// Free-form text generation. Returns empty string on failure.
 pub async fn generate_text(prompt: &str) -> String {
     let body = json!({
-        "model": config::OLLAMA_MODEL,
+        "model": config::ollama_model(),
         "prompt": prompt,
         "stream": false,
         "options": { "temperature": 0.2, "num_ctx": 8192 }
     });
     let out = async {
-        let resp = client(180)
+        let resp = client(240)
             .post(format!("{}/api/generate", config::OLLAMA_URL))
             .json(&body)
             .send()
             .await
             .ok()?;
         let v: serde_json::Value = resp.json().await.ok()?;
-        Some(v.get("response")?.as_str()?.trim().to_string())
+        Some(strip_think(v.get("response")?.as_str()?))
     }
     .await;
     out.unwrap_or_default()

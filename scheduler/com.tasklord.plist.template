@@ -12,12 +12,18 @@
     <string>__TASKLORD_DIR__/run.sh</string>
   </array>
 
-  <!-- Re-clock every night at 5:30 AM. RunAtLoad also clocks once on install. -->
+  <!-- Re-clock twice a day: 6:00 AM and 6:00 PM. RunAtLoad clocks once on install. -->
   <key>StartCalendarInterval</key>
-  <dict>
-    <key>Hour</key><integer>5</integer>
-    <key>Minute</key><integer>30</integer>
-  </dict>
+  <array>
+    <dict>
+      <key>Hour</key><integer>6</integer>
+      <key>Minute</key><integer>0</integer>
+    </dict>
+    <dict>
+      <key>Hour</key><integer>18</integer>
+      <key>Minute</key><integer>0</integer>
+    </dict>
+  </array>
 
   <key>RunAtLoad</key>
   <true/>
