@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tasklord</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__TASKLORD_DIR__/run.sh</string>
+  </array>
+
+  <!-- Re-clock every night at 5:30 AM. RunAtLoad also clocks once on install. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>5</integer>
+    <key>Minute</key><integer>30</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>__TASKLORD_DIR__/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__TASKLORD_DIR__/logs/launchd.err.log</string>
+</dict>
+</plist>

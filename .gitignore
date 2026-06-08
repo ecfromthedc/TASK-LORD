@@ -1,0 +1,20 @@
+# Private data — your real projects, sessions, Trello boards live here. Never commit.
+tasklord.db
+tasklord.db-journal
+tasklord.db-wal
+tasklord.db-shm
+board/board.json
+board/board.js
+logs/
+
+# Generated from template by install.sh
+scheduler/com.tasklord.plist
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS / temp
+.DS_Store
+*.command

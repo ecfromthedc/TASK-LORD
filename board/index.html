@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TASK LORD</title>
+<style>
+  :root{
+    /* vaporwave on deep dark — restrained, neon used as accent only */
+    --bg:#07060d; --bg2:#0b0a16;
+    --panel:rgba(20,18,38,.55); --panel-solid:#13111f;
+    --line:rgba(140,120,220,.14); --line-hi:rgba(255,113,206,.45);
+    --ink:#ece9ff; --mut:#8b86b8; --faint:#564f7e;
+    --pink:#ff71ce; --cyan:#21d4fd; --mint:#3bf0b0; --purple:#b967ff; --gold:#ffd76e;
+    --backlog:#6f6a96; --prog:var(--cyan); --block:var(--pink); --done:var(--mint);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);
+    font:13.5px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(185,103,255,.18), transparent 60%),
+      radial-gradient(900px 500px at 92% 0%, rgba(33,212,253,.12), transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* faint future grid */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(140,120,220,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(140,120,220,.045) 1px,transparent 1px);
+    background-size:46px 46px;mask-image:linear-gradient(180deg,transparent,#000 18%,#000 75%,transparent);}
+  header,.board,footer{position:relative;z-index:1}
+
+  header{position:sticky;top:0;z-index:9;padding:16px 24px;display:flex;
+    align-items:center;gap:18px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(7,6,13,.92),rgba(7,6,13,.55));
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  h1{font-size:15px;margin:0;letter-spacing:.42em;font-weight:600;text-transform:uppercase}
+  h1 .lord{background:linear-gradient(90deg,var(--pink),var(--purple),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 14px rgba(255,113,206,.35))}
+  .meta{color:var(--mut);font-size:11px;letter-spacing:.04em}
+  .spacer{flex:1}
+  input.search{background:rgba(10,9,20,.7);border:1px solid var(--line);color:var(--ink);
+    padding:8px 13px;border-radius:10px;min-width:210px;font-size:12.5px;outline:none;letter-spacing:.02em}
+  input.search:focus{border-color:var(--line-hi);box-shadow:0 0 0 3px rgba(255,113,206,.08)}
+  .filters{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:rgba(20,18,38,.5);color:var(--mut);
+    padding:5px 11px;border-radius:999px;cursor:pointer;font-size:11px;user-select:none;
+    letter-spacing:.04em;transition:.15s;text-transform:lowercase}
+  .chip:hover{color:var(--ink)}
+  .chip.on{color:var(--ink);border-color:var(--line-hi);
+    box-shadow:0 0 0 1px rgba(255,113,206,.25),0 0 16px rgba(255,113,206,.12)}
+  .chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 24px 60px;align-items:start}
+  @media(max-width:1100px){.board{grid-template-columns:1fr 1fr}}
+  @media(max-width:680px){.board{grid-template-columns:1fr}}
+  .col{border:1px solid var(--line);border-radius:16px;min-height:130px;
+    background:linear-gradient(180deg,rgba(18,16,33,.5),rgba(11,10,22,.35));overflow:hidden}
+  .col h2{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;margin:0;
+    padding:14px 16px;display:flex;align-items:center;gap:10px;color:var(--mut);
+    border-bottom:1px solid var(--line)}
+  .col h2 .n{margin-left:auto;color:var(--ink);font-weight:600;font-size:11px;
+    background:rgba(140,120,220,.12);padding:1px 9px;border-radius:999px}
+  .bar{height:2px}
+  .bar.backlog{background:linear-gradient(90deg,var(--backlog),transparent)}
+  .bar.in_progress{background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan)}
+  .bar.blocked{background:linear-gradient(90deg,var(--pink),transparent);box-shadow:0 0 12px var(--pink)}
+  .bar.done{background:linear-gradient(90deg,var(--mint),transparent);box-shadow:0 0 12px var(--mint)}
+  .cards{padding:12px;display:flex;flex-direction:column;gap:12px}
+
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:13px;
+    padding:13px 14px;backdrop-filter:blur(6px);transition:.18s;overflow:hidden}
+  .card:hover{border-color:var(--line-hi);transform:translateY(-1px);
+    box-shadow:0 6px 30px rgba(0,0,0,.4),0 0 0 1px rgba(255,113,206,.12)}
+  .card .meta-row{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+  .ident{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint);letter-spacing:.06em}
+  .name{font-weight:650;font-size:13.5px;margin:2px 0 6px;word-break:break-word;letter-spacing:.01em}
+  .badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.06em;
+    text-transform:uppercase;white-space:nowrap;border:1px solid transparent}
+  .area{color:#07060d}
+  .type{background:rgba(140,120,220,.12);border-color:var(--line)}
+  .prio{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:var(--mut);
+    letter-spacing:.05em;text-transform:uppercase}
+  .prio b{width:6px;height:6px;border-radius:50%}
+  .prio.urgent{color:var(--pink)} .prio.urgent b{background:var(--pink);box-shadow:0 0 8px var(--pink)}
+  .prio.high{color:var(--gold)} .prio.high b{background:var(--gold)}
+  .prio.medium b{background:var(--cyan)} .prio.low b{background:var(--faint)}
+  .leftoff{color:#cdc8f0;font-size:12px;margin:6px 0}
+  .next{color:#bff7e4;font-size:11.5px;margin-top:7px}
+  .next b,.block b{font-weight:700;opacity:.7;font-size:9px;letter-spacing:.08em;margin-right:5px}
+  .block{color:#ffc2e6;font-size:11.5px;margin-top:6px}
+  .foot{display:flex;gap:7px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .tag{font-size:10px;color:var(--mut);background:rgba(10,9,20,.5);border:1px solid var(--line);
+    padding:2px 7px;border-radius:6px;letter-spacing:.02em}
+  .tag.stale{color:var(--gold);border-color:rgba(255,215,110,.3)}
+  .tag.dirty{color:var(--cyan);border-color:rgba(33,212,253,.3)}
+  .path{font:10px/1.4 ui-monospace,Menlo,monospace;color:var(--faint);word-break:break-all;margin-top:8px;opacity:.65}
+  .cook{margin-top:11px;width:100%;cursor:pointer;border:1px solid var(--line-hi);
+    background:linear-gradient(90deg,rgba(255,113,206,.12),rgba(185,103,255,.1));
+    color:var(--ink);padding:8px;border-radius:9px;font-size:11px;font-weight:650;
+    letter-spacing:.1em;text-transform:uppercase;transition:.15s}
+  .cook:hover{box-shadow:0 0 22px rgba(255,113,206,.3);background:linear-gradient(90deg,rgba(255,113,206,.22),rgba(33,212,253,.16))}
+  .empty{color:var(--faint);padding:22px;text-align:center;font-size:11px;letter-spacing:.05em}
+  footer{color:var(--faint);font-size:10.5px;text-align:center;padding:18px;letter-spacing:.06em}
+
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:rgba(15,13,28,.96);border:1px solid var(--line-hi);color:var(--ink);
+    padding:12px 18px;border-radius:11px;font-size:12px;max-width:520px;z-index:50;
+    opacity:0;transition:.25s;box-shadow:0 0 30px rgba(255,113,206,.2);pointer-events:none}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast b{color:var(--pink)}
+  code{font:11px ui-monospace,Menlo,monospace;color:var(--cyan)}
+</style>
+</head>
+<body>
+<header>
+  <h1>TASK&nbsp;<span class="lord">LORD</span></h1>
+  <span class="meta" id="meta">loading…</span>
+  <div class="spacer"></div>
+  <input class="search" id="search" placeholder="filter…" />
+  <div class="filters" id="srcFilters">
+    <span class="chip on" data-src="session"><span class="dot" style="background:var(--purple)"></span>sessions</span>
+    <span class="chip on" data-src="code"><span class="dot" style="background:var(--cyan)"></span>code</span>
+    <span class="chip on" data-src="business"><span class="dot" style="background:var(--mint)"></span>business</span>
+    <span class="chip" data-staleonly="1">stale</span>
+  </div>
+</header>
+
+<div class="filters" id="areaFilters" style="padding:8px 24px 0"></div>
+<div class="board" id="board"></div>
+<footer id="footer"></footer>
+<div id="toast"></div>
+
+<script src="board.js" onerror="window.__noboardjs=1"></script>
+<script>
+const COLS=[["backlog","Backlog"],["in_progress","In Progress"],["blocked","Blocked"],["done","Done"]];
+const PRIO=["","urgent","high","medium","low"];
+let DATA={cards:[]};
+const state={sources:new Set(["session","code","business"]),areas:new Set(),staleOnly:false,q:""};
+const TOKEN = window.TASKLORD_TOKEN || null;
+
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function idle(d){if(d==null)return"";if(d===0)return"today";if(d===1)return"1d";return d+"d idle";}
+function lum(hex){if(!hex)return"#07060d";const h=hex.replace("#","");const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return (r*299+g*587+b*114)/1000>140?"#07060d":"#fff";}
+
+function cardHTML(c){
+  const area = c.area ? `<span class="badge area" style="background:${esc(c.area_color||'#888')};color:${lum(c.area_color)}">${esc(c.area)}</span>`:"";
+  const type = c.type ? `<span class="badge type" style="color:${esc(c.type_color||'var(--mut)')};border-color:${esc(c.type_color||'')}55">${esc(c.type)}</span>`:"";
+  const p = c.priority||0;
+  const prio = p&&p<=4 ? `<span class="prio ${PRIO[p]}"><b></b>${esc(c.priority_label||PRIO[p])}</span>`:"";
+  const ident = c.identifier?`<span class="ident">${esc(c.identifier)}</span>`:"";
+  const next=(c.next_step&&c.next_step!=="—")?`<div class="next"><b>NEXT</b>${esc(c.next_step)}</div>`:"";
+  const block=c.blockers?`<div class="block"><b>BLOCKED</b>${esc(c.blockers)}</div>`:"";
+  const stale=c.stale?`<span class="tag stale">${esc(idle(c.days_idle))}</span>`:(c.days_idle!=null?`<span class="tag">${esc(idle(c.days_idle))}</span>`:"");
+  const dirty=c.git&&c.git.dirty?`<span class="tag dirty">● ${c.git.dirty_count} uncommitted</span>`:"";
+  const path=c.path?`<div class="path">${esc(c.path)}</div>`:"";
+  const verb=c.source==="session"?"▶ resume session":c.source==="business"?"↗ open trello":"🔥 cook";
+  return `<div class="card">
+    <div class="meta-row">${ident}${area}${type}${prio}</div>
+    <div class="name">${esc(c.label)}</div>
+    ${c.left_off&&c.left_off!=="—"?`<div class="leftoff">${esc(c.left_off)}</div>`:""}
+    ${next}${block}
+    <div class="foot">${stale}${dirty}</div>
+    ${path}
+    <button class="cook" onclick='cook(${JSON.stringify(c.id)})'>${verb}</button>
+  </div>`;
+}
+
+function render(){
+  const q=state.q.toLowerCase();
+  const cards=DATA.cards.filter(c=>{
+    if(!state.sources.has(c.source))return false;
+    if(state.areas.size && !state.areas.has(c.area))return false;
+    if(state.staleOnly && !c.stale)return false;
+    if(q && !((c.label||"").toLowerCase().includes(q)||(c.left_off||"").toLowerCase().includes(q)||(c.next_step||"").toLowerCase().includes(q)||(c.path||"").toLowerCase().includes(q)||(c.type||"").toLowerCase().includes(q)))return false;
+    return true;
+  });
+  document.getElementById("board").innerHTML=COLS.map(([k,t])=>{
+    const list=cards.filter(c=>c.status===k);
+    const inner=list.length?list.map(cardHTML).join(""):`<div class="empty">— clear —</div>`;
+    return `<section class="col"><div class="bar ${k}"></div><h2>${t}<span class="n">${list.length}</span></h2><div class="cards">${inner}</div></section>`;
+  }).join("");
+  document.getElementById("meta").textContent=`${cards.length}/${DATA.total||DATA.cards.length} · ${fmt(DATA.generated_at)}${TOKEN?" · live":" · read-only"}`;
+}
+
+function fmt(iso){if(!iso)return"?";try{return new Date(iso).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}catch(e){return iso;}}
+
+function toast(html,ms=4600){const t=document.getElementById("toast");t.innerHTML=html;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),ms);}
+
+function cook(id){
+  const c=DATA.cards.find(x=>x.id===id);if(!c)return;
+  if(TOKEN){
+    fetch(`/cook?id=${encodeURIComponent(id)}&token=${encodeURIComponent(TOKEN)}`)
+      .then(r=>r.json()).then(r=>{
+        if(!r.ok){toast("⚠️ "+esc(r.error||"failed"));return;}
+        toast(`<b>${esc(r.action)}</b> — ${esc(c.label)}<br><span style="color:var(--mut)">directive copied · paste into the session</span>`);
+      }).catch(()=>toast("⚠️ launchpad not reachable"));
+  } else {
+    const cmd = c.path ? `cd ${c.path} && claude${c.session_id?` --resume ${c.session_id}`:""}` : "(open Trello)";
+    navigator.clipboard.writeText(cmd).then(()=>toast(`<b>copied command</b><br><span style="color:var(--mut)">${esc(cmd)}</span><br>run <code>python3 serve.py</code> for one-click cook`));
+  }
+}
+
+function buildAreaFilters(){
+  const wrap=document.getElementById("areaFilters");
+  const areas=DATA.areas||{};
+  const keys=Object.keys(areas).filter(Boolean).sort((a,b)=>areas[b]-areas[a]);
+  if(!keys.length){wrap.innerHTML="";return;}
+  wrap.innerHTML=keys.map(a=>`<span class="chip" data-area="${esc(a)}">${esc(a)} <span style="opacity:.5">${areas[a]}</span></span>`).join("");
+  wrap.onclick=e=>{const ch=e.target.closest(".chip");if(!ch)return;const a=ch.dataset.area;
+    if(state.areas.has(a)){state.areas.delete(a);ch.classList.remove("on");}else{state.areas.add(a);ch.classList.add("on");}render();};
+}
+
+document.getElementById("srcFilters").addEventListener("click",e=>{
+  const chip=e.target.closest(".chip");if(!chip)return;
+  if(chip.dataset.staleonly){state.staleOnly=!state.staleOnly;chip.classList.toggle("on");}
+  else{const s=chip.dataset.src;if(state.sources.has(s)){state.sources.delete(s);chip.classList.remove("on");}else{state.sources.add(s);chip.classList.add("on");}}
+  render();
+});
+document.getElementById("search").addEventListener("input",e=>{state.q=e.target.value;render();});
+
+function boot(d){DATA=d;buildAreaFilters();render();
+  document.getElementById("footer").textContent=`TASK LORD · ${d.total} issues · linear-model · ${JSON.stringify(d.counts)}`;}
+fetch("board.json?_="+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json();}).then(boot)
+  .catch(()=>{if(window.BOARD){boot(window.BOARD);return;}
+    document.getElementById("board").innerHTML=`<div class="empty">No data yet — run <code>python3 harvest.py</code>, then reload.</div>`;});
+</script>
+</body>
+</html>
