@@ -130,3 +130,40 @@ pub const SERVE_PORT: u16 = 7666;
 pub fn ollama_model() -> String {
     std::env::var("TASKLORD_MODEL").unwrap_or_else(|_| "deepseek-r1:8b".into())
 }
+
+// ---- LLM provider selection (local Ollama vs hosted DeepSeek API) -----------
+
+pub const DEEPSEEK_URL: &str = "https://api.deepseek.com/chat/completions";
+
+/// Which backend to summarize with: "deepseek" (hosted API) or "ollama" (local).
+/// Defaults to deepseek when a key is configured, else local Ollama.
+pub fn provider() -> String {
+    std::env::var("TASKLORD_PROVIDER").unwrap_or_else(|_| {
+        if deepseek_key().is_some() {
+            "deepseek".into()
+        } else {
+            "ollama".into()
+        }
+    })
+}
+
+/// DeepSeek API key, resolved (in order) from:
+///   1. env DEEPSEEK_API_KEY
+///   2. file ~/.config/tasklord/deepseek.key  (trimmed)
+/// Never logged. Returns None if absent.
+pub fn deepseek_key() -> Option<String> {
+    if let Ok(k) = std::env::var("DEEPSEEK_API_KEY") {
+        let k = k.trim().to_string();
+        if !k.is_empty() {
+            return Some(k);
+        }
+    }
+    let f = home().join(".config").join("tasklord").join("deepseek.key");
+    std::fs::read_to_string(f).ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+}
+
+/// Hosted DeepSeek model. `deepseek-chat` (V3) is fast + great at JSON;
+/// `deepseek-reasoner` (R1) reasons harder. Override with TASKLORD_DEEPSEEK_MODEL.
+pub fn deepseek_model() -> String {
+    std::env::var("TASKLORD_DEEPSEEK_MODEL").unwrap_or_else(|_| "deepseek-chat".into())
+}

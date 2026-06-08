@@ -61,6 +61,29 @@ cargo build --release
 
 Don't want the LLM? `tasklord harvest --no-llm` uses fast heuristics instead.
 
+## Model & provider
+
+TASK LORD summarizes with one of two backends:
+
+- **Local (Ollama)** — default, free, private. Model via `TASKLORD_MODEL`
+  (default `deepseek-r1:8b`).
+- **Hosted DeepSeek API** — higher quality. Auto-used when a key is present.
+  Model via `TASKLORD_DEEPSEEK_MODEL` (`deepseek-chat` = V3, default; or
+  `deepseek-reasoner` = R1).
+
+Provide the key (never committed) one of two ways:
+
+```bash
+# env var
+export DEEPSEEK_API_KEY="sk-..."
+
+# or a key file (works headless / for the launchd job)
+mkdir -p ~/.config/tasklord
+printf %s "sk-..." > ~/.config/tasklord/deepseek.key && chmod 600 ~/.config/tasklord/deepseek.key
+```
+
+Force a backend with `TASKLORD_PROVIDER=deepseek` or `=ollama`.
+
 > **macOS tip:** clone outside `~/Documents`, `~/Desktop`, `~/Downloads`.
 > launchd (used for nightly refresh) can't touch those folders without Full
 > Disk Access.

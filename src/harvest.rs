@@ -2,7 +2,7 @@
 
 use crate::model::{Card, Summary};
 use crate::sources::{code, transcripts, trello};
-use crate::{config, ollama, store};
+use crate::{config, llm, store};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use std::fs;
@@ -87,7 +87,7 @@ async fn summarize(c: &Card, use_llm: bool) -> Summary {
             .replace("{label}", &c.label)
             .replace("{facts}", &facts_str(c))
             .replace("{tail}", &c.tail);
-        if let Some(s) = ollama::generate_json::<Summary>(&prompt).await {
+        if let Some(s) = llm::generate_json::<Summary>(&prompt).await {
             if VALID.contains(&s.status.as_str()) {
                 return Summary {
                     status: s.status,
@@ -141,9 +141,11 @@ pub async fn run(use_llm: bool) -> Result<()> {
         });
     }
 
-    let use_llm = use_llm && ollama::is_up().await;
-    if !use_llm {
-        eprintln!("[harvest] Ollama unavailable — using heuristics");
+    let use_llm = use_llm && llm::available().await;
+    if use_llm {
+        eprintln!("[harvest] summarizing via {}", llm::describe());
+    } else {
+        eprintln!("[harvest] LLM unavailable — using heuristics");
     }
 
     let total = sessions.len();

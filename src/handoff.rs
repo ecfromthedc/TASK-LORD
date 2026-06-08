@@ -3,7 +3,7 @@
 
 use crate::config;
 use crate::model::ExportCard;
-use crate::ollama;
+use crate::llm;
 use serde::Deserialize;
 use serde_json::Value;
 use std::fs::{self, File};
@@ -134,7 +134,7 @@ async fn distill(text: &str) -> String {
     }
     let mut notes = Vec::new();
     for (i, ch) in chunks.iter().enumerate() {
-        let n = ollama::generate_text(&CHUNK_PROMPT.replace("{slice}", ch)).await;
+        let n = llm::generate_text(&CHUNK_PROMPT.replace("{slice}", ch)).await;
         if !n.is_empty() {
             notes.push(format!("[part {}]\n{}", i + 1, n));
         }
@@ -224,7 +224,7 @@ pub async fn build(group: &str, session_id: &str, card: &ExportCard) -> Option<P
         .replace("{label}", label)
         .replace("{path}", &path)
         .replace("{content}", &content);
-    let fields: Fields = ollama::generate_json(&prompt).await.unwrap_or_else(|| Fields {
+    let fields: Fields = llm::generate_json(&prompt).await.unwrap_or_else(|| Fields {
         tldr: card.left_off.clone(),
         current_state: card.left_off.clone(),
         next_steps: if card.next_step != "—" { vec![card.next_step.clone()] } else { vec![] },

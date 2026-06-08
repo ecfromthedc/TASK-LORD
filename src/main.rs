@@ -2,8 +2,10 @@
 //! sessions, then lets you cook a card back into a fresh, handed-off session.
 
 mod config;
+mod deepseek;
 mod handoff;
 mod harvest;
+mod llm;
 mod model;
 mod ollama;
 mod serve;
