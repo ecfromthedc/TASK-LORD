@@ -90,7 +90,10 @@ Force a backend with `TASKLORD_PROVIDER=deepseek` or `=ollama`.
 
 ## Cook — click a card, land back in the work
 
-Served by `tasklord serve` (loopback-only, per-run security token). Clicking a card:
+Served by `tasklord serve` (loopback-only, per-run security token). This server
+**executes shell/AppleScript derived from `board.json`** — `board.json` is
+trusted input. Never expose the port on a network or tunnel without additional
+auth. See [SECURITY.md](SECURITY.md) for the full trust model. Clicking a card:
 
 - **session** → distills the prior session into a **context handoff doc**, then
   opens your terminal in the project and starts a **fresh** `claude` — clean

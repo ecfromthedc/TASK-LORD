@@ -226,8 +226,17 @@ pub async fn run() -> anyhow::Result<()> {
         .route("/refresh", get(refresh))
         .with_state(app);
 
+    // Loopback only, by construction: the bind address is hardcoded to 127.0.0.1
+    // and is not configurable, so the server can never be exposed on a network
+    // interface. Do NOT change this to 0.0.0.0 or a LAN address — see SECURITY.md.
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", config::SERVE_PORT)).await?;
     println!("TASK LORD launchpad: {}", url);
+    println!(
+        "Security: loopback-only (127.0.0.1); every cook/dismiss/refresh requires the \
+         per-run token above. This server EXECUTES shell/AppleScript from board.json — \
+         treat board.json as trusted input and never expose this port on a network or \
+         tunnel without additional auth. See SECURITY.md."
+    );
     println!("Click a card to cook, ✕ to dismiss. Ctrl+C to stop.");
     let _ = Command::new("open").arg(&url).spawn();
     axum::serve(listener, router).await?;
